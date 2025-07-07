@@ -1,0 +1,44 @@
+must be declare as a blueprint in Flask
+Upload feature
+
+forms.py covers the font end of the website to make sure the security so there will be no malicious input
+models.py : the database
+views.py takes role as logic gate to navigate alll the function of website
+
+
+
+A Hybrid Approach (Often Best)
+
+1.Store the original file.
+2.As a background task, extract the full plain text and store it (e.g., as learning_material.extracted_text_storage_path in your database).
+(Optional but highly recommended for UX) As another background step, or part of the previous one, send this full extracted text to a relatively inexpensive AI call to get a structured overview (e.g., list of chapters, main topics, a concise summary). Store this overview.
+3.When the user wants to create a test for a material:
+4.Show them the overview (chapters/topics/summary).
+Allow them to select a chapter/topic, or specify page numbers (if PDF), or enter keywords.
+Your application then retrieves the relevant portion from the already fully extracted plain text file based on their selection. (e.g., if they select "Chapter 3," and your AI overview identified the start/end of Chapter 3 in the plain text, you grab that slice).
+Send only this targeted plain text slice to the main AI for question generation.
+
+Next step development:
++ create a box for people to name there submitted data and a way to create group of knowledge so that for user to manage their material : if have time coming back to createcheked
+
++ send their file for AI with proper prompt to get extracted text for better mapping each time create a test(using hybrid file and also extracted text) : not checked
+
++ create a new feature(blueprint)-test_creating for user to interact with their uploaded material :
+
+
+
+
+
+
+
++create each time to restore the data also from the user : not checked the data is not stored permenant : do this only create all the desired function for the website
+
+Display a bunch of form,requirement of the test.
++scope of the test 
++theme of the test
++ time after exposing the material
++ form of the test (open-ended)
+
+
+
+

@@ -1,0 +1,46 @@
++----------------------------+
+|  User                      |
+|----------------------------|
+| id (PK)                    |
+| ... (other user fields)    |
++-------------^--------------+
+              |
+ (1)          |
+              |
++-------------+--------------+      +------------------------------+
+|  TestAttempt               |      |  LearningMaterial            |
+|----------------------------|      |------------------------------|
+| id (PK)                    |      | id (PK)                      |
+| user_id (FK to User) ------+      | ... (other material fields)  |
+| test_id (FK to Test) ------+      +-----------------^------------+
+| status                     |                        |
+| started_at                 |                        | (1)
+| completed_at               |                        |
+| current_question_order     |      +-----------------+------------+
++-------------^--------------+      |  Test                        |
+              |                     |------------------------------|
+    (M)       |                     | id (PK)                      |
+              |                     | name                         |
+              |                     | user_id (FK to User)         |
++-------------+--------------+      | material_id (FK to Material) |
+|  UserAnswer                |      | spec_scope                   |
+|----------------------------|      | spec_goal                    |
+| id (PK)                    |      | spec_understanding           |
+| attempt_id (FK to Attempt)-+      | created_at                   |
+| question_id (FK to Q) ----+      +----^-----------------^--------+
+| answer_text                |         |                 |
+| feedback_text              |   (1)   |                 | (1)
+| submitted_at               |         |                 |
++----------------------------+         |                 |
+                                       | (M)             | (M)
+                                       |                 |
+                                +------+------ -+      |
+                                |  Question     |      |
+                                |---------------|      |
+                                | id (PK)       |      |
+                                | test_id (FK) --+      |
+                                | question_text |      |
+                                | order         |      |
+                                +------^--------+      |
+                                       |               |
+                                       +---------------+

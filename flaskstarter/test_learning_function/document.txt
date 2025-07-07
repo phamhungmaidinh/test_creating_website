@@ -1,0 +1,97 @@
+Feature of this function:
+
++ a  button on the corner of the website(in header.html file) 
+go to an site for people to : 2 option - 2 button
+1.learning from old test : scroll down to the beautifully designed library : Summarize with erkennbar Title for eassy choosing for user
+    should be designed like a online library:like this one https://booksco.com/list/devin
+    //still not be completed 
+2.create new one:
+    2.1: using old material 
+
++ the specification part of the test: Where user put data in to make the test sinnvoll
+    SELECT material : like finance problemset sell stocks option 
+    (create a list with a bunch of questions)
+    List of Question :
+        Name of the test : input blank
+
+        Scope of the test : diasjdijalskdkalsd
+
+        Time after exposing the material:
+        optional(Could be left )
+
+        Current understanding of the material : need more specification
+        Suggestion below the blank if clicked then become the answering. ------ AKA : these "suggestion chips" or "clickable tags".
+
+        Goal of this test:
+        Suggestion below the blank if clicked then become the answering.
+        
+        How many question (optional system would automatically suggest reasonable amount of test) : 2 option lassen das System or manual
+
+
+        Automatically answered by the system
+        Form of question : automatically open-ended question cause the creator could just support this form :)))
+        
+        Prompting Engineering :
+            # This is a Python f-string that will be your prompt
+            
+    Suggest appropiate amount of number:
+            # This is the f-string for your analysis-only AI call
+        
+
+
+
+
+The main part of the function(answering part):
+    Focus on question by question Submisson:
+    marked each question
+    Live Discussion with AI teacher-tutor:
+    design : in the header there would be the theme of the test just for reminding
+    Save for later function: incase of interruption
+    Review mode:
+    move on from question: a button to move from question to question in a same test and request a new attempt in the database
+
+
+
+
+Architecture of the feature:
+    Database:
+    a database to store the created test and also flexible foe function taking later:
+    like there will be a status for to check how many time the user have done this test and store each time of that
+    and another thing like storing their unfinished test
+    + a database would allow people to also store their progress in the test
+
+
+Architecture of the database of feature:
+
+Processing:
+    take the information from material and test configuration
+    question will be displayed on the screen Each question at a time
+    there will be move on button and move back button
+    while answering the brain will process each question at a time 
+    each time a question is answered or a conversation happens the database must be updated
+    the current_question_order in test_attempt TABLE will be updated each time user move from question to question
+    when interruption happens like tab closes or people just quit:
+    when reloading the question will be take from test_attempt table and transfer back to question table for displaying
+
+
+displaying:
+    file choosing_page will display 2 big button for people to choose
+    1.if the user chooses for old test there will be a roll down for people to choose
+    2.if the user choose create new redirect people to the new html file 
+
+
+Main logic Gate:
+Doesnt understand how gitignore works before air must be checked later
+
+Some function that need to be work on:
+Emergency : Taylor the submit link function so that there will be a summarized version of the text to analyze for test creating  by tailoring the prompt so that we could get not only a roadmap but also a fully extracted version of content from the link.
+1.Creating front-end for the user to use in the test-taking route(displauing the question) 
+2.Creating the logic gate and some function to make the creating_test function work properly and also helps user having a plesant experience. Done
+3.Create the logic for test_taking function 
+4.create the function to push processing back to the background so that user will not always have to wait for some kind of shitty loading. Not finished
+While waiting for creating test just give user some random fact to the user to read and give them a bar to see the processing progress.
+
+
+
+
+test_learning_function

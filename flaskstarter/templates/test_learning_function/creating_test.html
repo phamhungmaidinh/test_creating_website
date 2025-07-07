@@ -1,0 +1,98 @@
+{% extends "layouts/base.html" %}
+{% from 'macros/_form.html' import render_field %}
+
+{% block body %}
+<style>
+    .hidden {
+        display: none;
+    }
+    .card {
+        margin-top: 2rem;
+    }
+    .choice-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1.2rem;
+    }
+</style>
+
+<div class="container mt-4">
+
+    <div id="source-choice-section">
+        <h1 class="mb-4">Create Your Test</h1>
+        <p class="lead">First, choose how you would like to begin.</p>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Create a Whole New Test</h5>
+                        <p class="card-text">Select one of your uploaded materials and configure a new test from scratch.</p>
+                        <button id="btn-create-new" class="btn btn-primary choice-btn">Start from Material</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Create from a Previous Test</h5>
+                        <p class="card-text">Use the settings from a test you've already made as a template.</p>
+                        <button id="btn-create-from-template" class="btn btn-secondary choice-btn">Start from Template</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="spec-form-section" class="hidden">
+        <h1 class="mb-4">Configure Your Test</h1>
+        <p class="lead">Fill in the details for your new test.</p>
+        
+        <form method="POST">
+            <div class="form-group mb-3">
+                <label for="material-select">Source Material</label>
+                <select class="form-control" id="material-select" name="material_id">
+                    {% for material in materials %}
+
+                        <option value="{{ material.id }}">{{ material.title }}</option>
+
+                    {% endfor %}
+                    </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="name">Test Name</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Chapter 5 Review">
+            </div>
+            <div class="form-group mb-3">
+                <label for="scope">Scope of the Test</label>
+                <input type="text" id="scope" name="scope" class="form-control" placeholder="Type a topic or use suggestions">
+                </div>
+            <div class="form-group mb-3">
+                <label for="goal">Primary Goal</label>
+                <input type="text" id="goal" name="goal" class="form-control" placeholder="Type a goal or use suggestions">
+            </div>
+
+            <hr>
+            <button type="submit" class="btn btn-primary btn-lg">Create Test</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    // Simplified JavaScript to only handle showing the form
+    document.addEventListener('DOMContentLoaded', function() {
+        const choiceSection = document.getElementById('source-choice-section');
+        const specSection = document.getElementById('spec-form-section');
+
+        const btnNew = document.getElementById('btn-create-new');
+        const btnTemplate = document.getElementById('btn-create-from-template');
+
+        function showSpecForm() {
+            choiceSection.classList.add('hidden');
+            specSection.classList.remove('hidden');
+        }
+
+        btnNew.addEventListener('click', showSpecForm);
+        btnTemplate.addEventListener('click', showSpecForm);
+    });
+</script>
+{% endblock %}

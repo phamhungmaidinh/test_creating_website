@@ -1,0 +1,137 @@
+{% extends 'layouts/base.html' %}
+
+{# Import form macros if you have a generic one. #}
+{% from "macros/_form.html" import render_form %} 
+
+{% set page_title = 'Upload Learning Material' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-2">
+            
+            <h1 class="mb-3">{{ page_title }} 📚</h1>
+            <p class="lead mb-4">Choose a file from your device or submit a link to an online resource to get started.</p>
+
+            <!-- File Upload Section -->
+            <div class="upload-section card p-4 shadow-sm mb-5">
+                <h2 class="h4 mb-3">Upload a File 📂</h2>
+                <form id="fileUploadForm" action="{{ url_for('learning_material_uploader_bp.handle_file_upload') }}" method="POST" enctype="multipart/form-data">
+    {{ file_upload_form.csrf_token }}
+    
+    <div class="drop-zone mb-3" id="dropZone">
+        <p id="dropZoneText">{{ file_upload_form.learning_material_file.label.text }}</p>
+        {{ file_upload_form.learning_material_file(id="fileInput", class="d-none") }}
+    </div>
+    
+    <p id="fileNameDisplay" class="text-muted small"></p>
+
+    {% if file_upload_form.learning_material_file.errors %}
+        <!-- ... error display logic ... -->
+    {% endif %}
+
+    {{ file_upload_form.submit(class="btn btn-primary w-100 mt-2") }}
+</form>
+            </div>
+
+            <div class="text-center my-4">
+                <span class="text-muted h5">OR</span>
+            </div>
+
+            <!-- Link Submission Section -->
+            <div class="upload-section card p-4 shadow-sm">
+                <h2 class="h4 mb-3">Submit a Link 🔗</h2>
+                <form id="linkUploadForm" action="{{ url_for('learning_material_uploader_bp.handle_link_submission') }}" method="POST">
+                    {{ link_submission_form.csrf_token }}
+                    
+                    <div class="mb-3">
+                        {{ link_submission_form.material_url.label(class="form-label") }}
+                        {{ link_submission_form.material_url(class="form-control", placeholder="https://example.com/your-resource") }}
+                        {% if link_submission_form.material_url.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in link_submission_form.material_url.errors %}
+                                    <span>{{ error }}</span><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {{ link_submission_form.submit(class="btn btn-success w-100") }}
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{# JavaScript for enhanced file input and drag-and-drop #}
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const dropZoneText = document.getElementById('dropZoneText');
+    const originalDropZoneText = dropZoneText ? dropZoneText.textContent : 'Drag & drop or click to select';
+
+    if (dropZone && fileInput && fileNameDisplay) {
+        // Trigger file input click when drop zone is clicked
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle file selection via file input
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = `Selected file: ${fileInput.files[0].name}`;
+                if(dropZoneText) dropZoneText.textContent = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = '';
+                if(dropZoneText) dropZoneText.textContent = originalDropZoneText;
+            }
+        });
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+    }
+</script>
+
+{# Custom CSS for the drop zone #}
+<style>
+    .drop-zone {
+        border: 2px dashed #007bff;
+        border-radius: .375rem;
+        padding: 50px 20px;
+        text-align: center;
+        cursor: pointer;
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        word-wrap: break-word;
+    }
+    .drop-zone.dragover {
+        background-color: #e9ecef;
+        border-color: #0056b3;
+    }
+    .drop-zone p {
+        margin: 0;
+        font-size: 1.1em;
+        color: #007bff;
+    }
+</style>
+
+{% endblock %}
