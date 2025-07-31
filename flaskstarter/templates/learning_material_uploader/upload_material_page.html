@@ -110,6 +110,68 @@
         });
     }
 </script>
+<script>
+document.getElementById("fileUploadForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const fileInput = form.querySelector("input[type='file']");
+    const submitBtn = form.querySelector("button[type='submit'], input[type='submit']");
+    const fileName = formData.get("learning_material_file")?.name;
+
+    if (!fileName) return;
+
+    const oldStatus = form.querySelector(".upload-status-box");
+    if (oldStatus) oldStatus.remove();
+
+    submitBtn.disabled = true;
+
+    const statusBox = document.createElement("div");
+    statusBox.className = "mt-3 alert alert-info upload-status-box";
+    statusBox.innerText = `⏳ Uploading "${fileName}"...`;
+    form.appendChild(statusBox);
+
+    fetch("{{ url_for('learning_material_uploader_bp.handle_file_upload') }}", {
+        method: "POST",
+        body: formData,
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusBox.innerText = data.message || "✅ Upload successful.";
+            statusBox.className = "mt-3 alert alert-success upload-status-box";
+        } else {
+            statusBox.innerText = data.message || "❌ Upload failed.";
+            statusBox.className = "mt-3 alert alert-danger upload-status-box";
+            submitBtn.disabled = false;
+        }
+
+        setTimeout(() => {
+            if (statusBox.parentNode) {
+                statusBox.remove();
+            }
+        }, 5000);
+    })
+    .catch((err) => {
+        console.error(err);
+        statusBox.innerText = "❌ Upload failed.";
+        statusBox.className = "mt-3 alert alert-danger upload-status-box";
+        submitBtn.disabled = false;
+
+        setTimeout(() => {
+            if (statusBox.parentNode) {
+                statusBox.remove();
+            }
+        }, 5000);
+    });
+});
+
+</script>
+
 
 {# Custom CSS for the drop zone #}
 <style>

@@ -295,3 +295,23 @@ def handle_link_submission():
         file_upload_form=file_form, 
         link_submission_form=link_form 
     )   
+
+from flask import Blueprint, render_template, request, jsonify
+from flaskstarter.learning_marterial_uploader.forms import FileUploadForm
+import os
+from werkzeug.utils import secure_filename
+
+bp = Blueprint("learning_marterial_uploader", __name__)
+
+@bp.route("/upload/ajax", methods=["POST"])
+def handle_file_upload_ajax():
+    form = FileUploadForm()
+    if form.validate_on_submit():
+        file = form.learning_material_file.data
+        filename = secure_filename(file.filename)
+        upload_folder = os.path.join("uploads")  # hoặc dùng current_app.config
+        os.makedirs(upload_folder, exist_ok=True)
+        file.save(os.path.join(upload_folder, filename))
+        return jsonify(success=True, filename=filename)
+    else:
+        return jsonify(success=False, message="Upload failed. Maybe CSRF or missing file.")
