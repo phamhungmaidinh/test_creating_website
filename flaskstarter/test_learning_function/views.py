@@ -106,6 +106,7 @@ def create_test():
     # Query the database for all materials owned by the current user
     test_spec = TestSpecificationForm()
     user_materials = LearningMaterial.query.filter_by(user_id=current_user.id).all()
+    test_spec.material_id.choices = [(m.id, m.title) for m in user_materials]
     #displaying the form ,that needed to be filled in to create a test.
     #if the choosing method is from the old test automatically just fill out all the form.Other case the blank space will be displayed.
     if request.method == 'GET':
@@ -113,148 +114,99 @@ def create_test():
         return render_template(
         'test_learning_function/creating_test.html',
         page_title='Creating Test',
-        #form=test_spec,
+        test_spec1=test_spec,
         materials = user_materials 
         )
     else:
-        if test_spec.validate_on_submit():
-            selected_id =request.form.get('material_id',type = int)
-            material = LearningMaterial.query.get(selected_id)
-            input_file = None
-            prompt = ""
-            if material.gemini_file_uri : # to check if that is a file
-                input_file = genai.get_file(name = material.gemini_file_uri)
-                prompt = call_AI_for_test_generation(
-                    test_spec.scope.data,
-                    test_spec.understanding.data,
-                    test_spec.goal.data,
-                    material.analysis_roadmap
-                    )
-                
-                test_text= request_ai(prompt,input_file)
-            else:
-                #link case where the exatracted text = material
-                extracted_text = material.analysis_roadmap
-                prompt = call_AI_for_test_generation(
-                    test_spec.scope.data,
-                    test_spec.understanding.data,
-                    test_spec.goal.data,
-                    None,
-                    material.analysis_roadmap
-                    )
-                test_text = request_ai(prompt)
-        #updating the database
-        #update fucking 4 table :))))
-            if test_text and 'questions' in test_text:
-                try:
-                    new_test = Test(
-                        name = test_spec.name.data,
-                        user_id = current_user.id,
-                        material_id = material.id,
-                        spec_scope = test_spec.scope.data,
-                        spec_goal = test_spec.goal.data,
-                        spec_understanding = test_spec.understanding.data,
-                    )
-                    db.session.add(new_test)
-                    #2. Loop through the questions from the AI and create Question objects
-                    for i, q_text in enumerate(test_text['questions']):
-                        question = Question(
-                            question_text=q_text,
-                            order=i + 1,  # Set the question order (1, 2, 3...)
-                            test=new_test  # Link this question to the new test
+        if test_spec.validate_on_submit(): #bug here
+                selected_id =test_spec.material_id.data
+                material = LearningMaterial.query.get(selected_id)
+                input_file = None
+                prompt = ""
+                if material.gemini_file_uri : # to check if that is a file
+                    input_file = genai.get_file(name = material.gemini_file_uri)
+                    prompt = call_AI_for_test_generation(
+                        test_spec.scope.data,
+                        test_spec.understanding.data,
+                        test_spec.goal.data,
+                        material.analysis_roadmap
                         )
-                        db.session.add(question)
                     
-                    # 3. Create the first 'TestAttempt' so the user can start the test right away
-                    new_attempt = TestAttempt(
-                        user=current_user, # Link the attempt to the user
-                        test=new_test      # Link the attempt to the new test
-                    )
-                    db.session.add(new_attempt)
+                    test_text= request_ai(prompt,input_file)
+                    flash(f"Success bro")
+                else:
+                    #link case where the exatracted text = material
+                    extracted_text = material.analysis_roadmap
+                    prompt = call_AI_for_test_generation(
+                        test_spec.scope.data,
+                        test_spec.understanding.data,
+                        test_spec.goal.data,
+                        None,
+                        extracted_text
+                        )
+                    test_text = request_ai(prompt)
+            #updating the database didnt if this right or wrong
+            #update fucking 4 table :))))
+                if test_text and 'questions' in test_text:
+                    try:
+                        new_test = Test(
+                            name = test_spec.name.data,
+                            user_id = current_user.id,
+                            material_id = material.id,
+                            spec_scope = test_spec.scope.data,
+                            spec_goal = test_spec.goal.data,
+                            spec_understanding = test_spec.understanding.data,
+                        )
+                        db.session.add(new_test)
+                        #2. Loop through the questions from the AI and create Question objects
+                        for i, q_text in enumerate(test_text['questions']):
+                            question = Question(
+                                question_text=q_text,
+                                order=i + 1,  # Set the question order (1, 2, 3...)
+                                test=new_test  # Link this question to the new test
+                            )
+                            db.session.add(question)
+                        # 3. Create the first 'TestAttempt' so the user can start the test right away
+                        new_attempt = TestAttempt(
+                            user_id=current_user.id, # Link the attempt to the user
+                            test=new_test      # Link the attempt to the new test
+                        )
+                        db.session.add(new_attempt)
 
-                    # 4. Commit all the new objects to the database in one transaction
-                    db.session.commit()
+                        # 4. Commit all the new objects to the database in one transaction
+                        db.session.commit()
 
-                    flash(f"Success! Your test '{new_test.name}' has been created.", 'success')
-                
-                # 5. Redirect the user to the test-taking page for their new attempt
-                    return redirect(url_for('test_learning_function_bp.take_test', test_attempt_id=new_attempt.id))
+                        flash(f"Success! Your test '{new_test.name}' has been created.", 'success')
+                    
+                    # 5. Redirect the user to the test-taking page for their new attempt
+                    #Need to fix from here redirect to the test_storage function
+                        return redirect(url_for('test_learning_function_bp.take_test', test_attempt_id=new_attempt.id))
 
-                except Exception as e:
-                    db.session.rollback() # Undo changes if an error occurs
-                    flash(f"A database error occurred: {e}", "danger")
-                    return render_template(
-                        'test_learning_function/creating_test.html',
-                         materials = user_materials
-                    )
-            return redirect(url_for('test_learning_function_bp.take_test', test_attempt_id=new_attempt.id))
-
-#ROUTE 2 for interactive test -taking page
-@test_learning_function_bp.route('/take_test/<int:test_attempt_id>', methods=['GET', 'POST'])
-@login_required
-#function to handle each test use case
-def take_test(test_attempt_id):
-    attempt = TestAttempt.query.get(test_attempt_id)
-    if attempt.user_id != current_user:
-        flash("Your are not authorized to view this test.", "danger")
-        return redirect() # test creating
-    
-    #Find the current question based on the order stored in the attempt
-    question = Question.query.filter_by(
-        test_id = attempt.test_id,
-        order = attempt.current_question_order,
-    ).first()
-    form = AnswerForm()
-    #handling the time when for reloading or first time accessing the page
-    # --- Logic for GET Request (When the page loads) ---
-    if request.method == 'GET':
-        latest_feedback = UserAnswer.query.filter_by(
-            attempt_id = attempt.id,
-            question_id = question.id
-        ).order_by(UserAnswer.submitted_at.desc()).first()
-        return render_template(
-            'test_learning_function/test_taking_page.html',
-            attempt = attempt,
-            question = question,
-            form = form,
-            latest_feedback = latest_feedback
-        )
-    else:
-    #Logic for POST Request(When user submits an answer)
-        if form.validate_on_submit():
-            user_answer_text = form.answer_text.data
-
-            #Find or create the answer record for this specific question and in this attempt
-            user_answer= UserAnswer.query.filter_by(attempt_id = attempt.id,question_id = question.id).first()
-            if not user_answer:
-                user_answer = UserAnswer(attempt_id = attempt.id,question_id = question.id)
-        
-            #Save the user's answer
-            user_answer.answer_text = user_answer_text
-            db.session.add(user_answer)
-
-            #Build the prompt and get feedback from the AI
-
-            conversation_history = user_answer.answer_text
-            feedback_prompt = create_feedback_prompt(question.question_text,user_answer_text,conversation_history) # need to go back later
-            AI_response = request_ai(feedback_prompt)
-
-            if AI_response and 'feedback_text' in AI_response:
-                user_answer.feedback_text = AI_response['feedback_text']
-                flash("Feedback received!","Success")
-            else:
-                flash("Could not get feedback from the AI", "warning")
-            db.session.commit()
+                    except Exception as e:
+                        db.session.rollback() # Undo changes if an error occurs
+                        flash(f"A database error occurred: {e}", "danger")
+                        return render_template(
+                            'test_learning_function/creating_test.html',
+                            page_title='Creating Test',
+                            test_spec1=test_spec,
+                            materials = user_materials 
+                            )
+        else:
+            flash (f"Fucking you the page still have bugs")
             return render_template(
-            'test_taking_page.html',
-            attempt = attempt,
-            question = question,
-            AI_response = latest_feedback
+                'test_learning_function/creating_test.html',
+                page_title='Creating Test',
+                test_spec1=test_spec,
+                materials = user_materials 
                 )
-        "ạdhasjkdajskdajk"
+    #return redirect(url_for('test_learning_function_bp.take_test', test_attempt_id=new_attempt.id))
 
         
-        
+@test_learning_function_bp.route('/take_test/<int:test_attempt_id>', methods = ['GET','POST'])
+@login_required
+
+def take_test(test_attempt_id):
+    attempt
             
         
 
